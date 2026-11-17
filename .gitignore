@@ -1,0 +1,42 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Comptes de service Firebase / Google Cloud
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+service-account*.json
+
+# --- Firebase CLI ---
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+.runtimeconfig.json
+
+# --- Node (si un jour outils de build / serveur local) ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# --- Éditeurs / IDE ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# --- Claude Code (réglages locaux) ---
+.claude/settings.local.json
+
+# --- Système ---
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
