@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Band'à Training</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/vexflow@3.0.9/releases/vexflow-min.js"></script>
+</head>
+<body>
+    <!-- TABLEAU DE BORD JOUEUR (Haut Gauche) -->
+    <div id="panneau-perso" class="panneau-perso" style="display: none;">
+        
+        <!-- NOUVEAU : En-tête Joueur (Clash Royale Style) -->
+        <!-- En-tête Joueur -->
+        <div class="en-tete-joueur">
+            <div class="icone-joueur" id="mon-avatar" onclick="ouvrirModalePersonnalisation()" title="Personnaliser le profil">👤</div>
+            
+            <!-- La barre d'XP réparée -->
+            <div class="info-xp-joueur" style="cursor: pointer; text-align: center;" onclick="afficherXPTotale()" title="Voir mon XP totale">
+                <div class="niveau-badge" id="badge-niveau">1</div>
+                
+                <div class="fond-jauge-xp">
+                    <div class="remplissage-jauge-xp" id="jauge-xp"></div>
+                </div>
+                
+                <span class="texte-xp" id="texte-xp">0 / 0</span>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 15px;">📊 Mes Statistiques</h2>
+        <p id="affichage-meilleur-combo" style="text-align: center; color: #ff9800; font-weight: bold; margin-bottom: 10px; font-size: 14px; margin-top: 0;">🔥 Meilleur Combo : 0</p>
+        <table class="table-records">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th title="Trombone">🖇️</th>
+                    <th title="Trompette">🎺</th>
+                    <th title="Sousaphone">🐘</th>
+                    <th title="Saxophone">🎷</th>
+                    <th title="Libre">🕊️</th>
+                </tr>
+            </thead>
+            <tbody id="corps-records">
+                <!-- Rempli par le Javascript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- NOUVEAU : La toile de fond pour la mosaïque fluide -->
+    <div id="fond-mosaique"></div>
+
+    <!-- BANDEAU DE COMPTE -->
+    <div id="barre-compte">
+        <!-- 1. Le pseudo ou "Non connecté" -->
+        <span id="info-joueur" style="margin-right: 15px;">Non connecté</span>
+        
+        <!-- 2. Le bouton pour se connecter (s'il n'est pas co) -->
+        <button id="btn-ouvrir-connexion" class="btn-petit">Se connecter</button>
+
+        <!-- 2bis. Le bouton help -->
+        <button id="btn-help" class="btn-petit" onclick="document.getElementById('modale-help').style.display='flex'" title="Comment jouer ?" style="color:#9e7f5b; font-weight:bold; font-size:14px">❓</button>
+        
+        <!-- 3. Le bouton Paramètres et son menu déroulant -->
+        <div style="position: relative;">
+            <button id="btn-parametres" class="btn-petit" onclick="toggleMenuParametres()">⚙️</button>
+            
+            <div id="menu-parametres" class="dropdown-menu">
+                <div class="param-item">
+                    <span>Combo châtoyant (Mode Classé)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="check-anim" onchange="changerParamAnimation()">
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+                <div class="param-item">
+                    <span>Répétition des notes difficiles (Mode Entraînement)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="check-algo" onchange="changerParamAlgo()">
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Le bouton Amis (Caché par défaut) -->
+        <button id="btn-amis" class="btn-petit" style="display:none;" onclick="ouvrirModaleAmis()">👥 Amis</button>
+        
+        <!-- 5. Le bouton Déconnexion (Caché par défaut) -->
+        <button id="btn-deconnexion" class="btn-petit" style="display:none;" title="Déconnexion">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- FENÊTRE MODALE DE CONNEXION (Style Menu Flottant) -->
+    <div id="modale-connexion" class="modale">
+        <div class="modale-contenu">
+            <span id="fermer-modale" class="fermer">&times;</span>
+            
+            <!-- EN-TÊTE DYNAMIQUE -->
+            <div id="en-tete-modale" style="display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px;">
+                <span id="btn-retour-connexion" style="display: none; position: absolute; left: 0; cursor: pointer; font-size: 18px;" title="Retour">⬅️</span>
+                <h2 id="titre-modale" style="margin: 0; font-size: 18px;">Se connecter</h2>
+            </div>
+
+            <!-- LES CHAMPS -->
+            <input type="text" id="pseudo-input" placeholder="Pseudo" style="display: none;">
+            <input type="email" id="email-input" placeholder="Adresse Email">
+            <input type="password" id="mdp-input" placeholder="Mot de passe (6 car. min)">
+            <p id="message-erreur" style="color: red; font-size: 13px; margin-top: 5px;"></p>
+            
+            <!-- BOUTONS DYNAMIQUES -->
+            <button id="btn-connexion">Se connecter</button>
+            <button id="btn-inscription" style="display: none;">Créer un compte</button>
+            
+            <!-- LIEN DE BASCULE -->
+            <p id="lien-bascule-mode" style="font-size: 13px; color: #007BFF; cursor: pointer; margin-top: 15px; margin-bottom: 0;">Pas de compte ? Créer un compte</p>
+        </div>
+    </div>
+
+    <!-- PANNEAU PLAGE DE NOTES (Anciennement Options) -->
+    <div class="panneau-options">
+        <h2 style="margin-bottom: 15px;">🎼 Plage de notes</h2>
+        
+        <div class="echelle-notes">
+            <div id="portee-echelle"></div>
+
+            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 13px; font-weight: bold; margin-bottom: 8px;">
+                <span style="color:#004551">Grave : <span style="color:#28a745" id="label-min">Mi</span></span>
+                <span style="color:#004551">Aiguë : <span style="color:#007BFF" id="label-max">Do</span></span>
+            </div>
+
+            <!-- Le double curseur superposé -->
+            <div class="double-slider-container">
+                <div class="slider-track"></div>
+                <div class="slider-fill" id="slider-fill"></div>
+                <input type="range" id="slider-min" oninput="mettreAJourPlage('min')">
+                <input type="range" id="slider-max" oninput="mettreAJourPlage('max')">
+            </div>
+        </div>
+
+        <hr class="separateur" id="separateur-options">
+        
+        <!-- NOUVEAU : Bouton altérations déplacé en bas avec le nouveau texte -->
+        <button id="btn-alterations" class="inactif" onclick="toggleAlterations()">
+            Altérations (#/b) : OFF
+        </button>
+    </div> <!-- FIN DU PANNEAU -->
+    
+
+    <!-- Ton conteneur existant -->
+    <div class="conteneur">
+        
+        <!-- NOUVEAU : Marges réduites et ajout de la barre -->
+        <h1 style="margin-top: 0; margin-bottom: 10px;">🎶 Band'à Training 🎶</h1>
+        <hr class="separateur" style="margin-top: 0; margin-bottom: 15px;">
+
+        <!-- NOUVEAU : Les grands onglets de mode de jeu -->
+        <div class="onglets-principaux">
+            <button id="onglet-entrainement" class="actif" onclick="activerModeClasse(false)">🟢 Entraînement</button>
+            <button id="onglet-classe" onclick="activerModeClasse(true)">🏆 Mode Classé</button>
+        </div>
+
+        <div class="choix-mode" id="menu-instruments" style="margin-bottom: 15px;">
+            <button id="btn-inst-trombone" class="active" onclick="changerInstrument('trombone')">🖇️</button>
+            <button id="btn-inst-trompette" onclick="changerInstrument('trompette')">🎺</button>
+            <button id="btn-inst-sousaphone" onclick="changerInstrument('sousaphone')">🐘</button>
+            <button id="btn-inst-saxophone" onclick="changerInstrument('saxophone')">🎷</button>
+            <button id="btn-inst-libre" onclick="changerInstrument('libre')">🕊️</button>
+        </div>
+
+        <!-- NOUVEAU : Ajout de l'ID "zone-choix-lecture" pour pouvoir la cacher en Classé -->
+        <div class="choix-mode" id="zone-choix-lecture">
+            <button id="btn-note" class="active" onclick="changerMode('note')">🎵 Notes</button>
+            <button id="btn-position" onclick="changerMode('position')">🎯 Positions</button>
+        </div>
+        
+        <!-- NOUVEAU : Conteneur global de la zone de jeu -->
+        <div id="zone-jeu-principale">
+            <p id="question-titre">Quel est le nom de cette note ?</p>
+
+            <div id="portee"></div>
+
+            <div id="combo-affichage"></div>
+            
+            <div id="zone-notes" class="zone-boutons">
+                <button data-valeur="Do" onclick="verifierReponse('Do')">Do<span class="raccourci">C / R</span></button>
+                <button data-valeur="Ré" onclick="verifierReponse('Ré')">Ré<span class="raccourci">D / T</span></button>
+                <button data-valeur="Mi" onclick="verifierReponse('Mi')">Mi<span class="raccourci">E / Y</span></button>
+                <button data-valeur="Fa" onclick="verifierReponse('Fa')">Fa<span class="raccourci">F / U</span></button>
+                <button data-valeur="Sol" onclick="verifierReponse('Sol')">Sol<span class="raccourci">G / I</span></button>
+                <button data-valeur="La" onclick="verifierReponse('La')">La<span class="raccourci">A / O</span></button>
+                <button data-valeur="Si" onclick="verifierReponse('Si')">Si<span class="raccourci">B / P</span></button>
+            </div>
+
+            <div id="zone-positions-coulisse" class="zone-boutons" style="display: none;">
+                <button data-valeur="1" onclick="verifierReponse('1')">1</button>
+                <button data-valeur="2" onclick="verifierReponse('2')">2</button>
+                <button data-valeur="3" onclick="verifierReponse('3')">3</button>
+                <button data-valeur="4" onclick="verifierReponse('4')">4</button>
+                <button data-valeur="5" onclick="verifierReponse('5')">5</button>
+                <button data-valeur="6" onclick="verifierReponse('6')">6</button>
+                <button data-valeur="7" onclick="verifierReponse('7')">7</button>
+            </div>
+
+            <div id="zone-positions-pistons" class="zone-boutons" style="display: none;">
+                <button data-valeur="0" onclick="verifierReponse('0')">0</button>
+                <button data-valeur="1" onclick="verifierReponse('1')">1<span class="raccourci">K</span></button>
+                <button data-valeur="2" onclick="verifierReponse('2')">2<span class="raccourci">L</span></button>
+                <button data-valeur="3" onclick="verifierReponse('3')">3<span class="raccourci">M</span></button>
+                
+                <button data-valeur="12" onclick="verifierReponse('12')">1<br>2</button>
+                <button data-valeur="23" onclick="verifierReponse('23')">2<br>3</button>
+                <button data-valeur="13" onclick="verifierReponse('13')">1<br>3</button>
+                <button data-valeur="123" onclick="verifierReponse('123')">1<br>2<br>3</button>
+
+                <div style="width: 100%; text-align: center; margin-top: 5px;">
+                    <span class="raccourci" style="display: inline-block;">S : Confirmer le raccourci</span>
+                </div>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-box juste">
+                    <span class="stat-label">✅ Bonnes réponses</span>
+                    <span class="stat-valeur"><span id="score-juste">0</span></span>
+                </div>
+                <div class="stat-box erreur">
+                    <span class="stat-label">❌ Erreurs</span>
+                    <span class="stat-valeur" id="score-erreurs">0</span>
+                </div>
+
+                <div id="boite-chrono" style="display: none; position: relative;">
+                    <div class="stat-box timer" style="margin: 0;">
+                        <span class="stat-label">⏳ Temps</span>
+                        <span class="stat-valeur" id="chrono">01:00</span>
+                    </div>
+                    <button id="btn-reset-chrono" onclick="reinitialiserJeu()" title="Recommencer">🔄</button>
+                </div>
+            </div>
+        </div> <!-- FIN DE LA ZONE DE JEU -->
+
+        <!-- NOUVEAU : L'écran de fin n'est plus une modale, il s'insère ici et remplace le jeu -->
+        <div id="ecran-fin" style="display: none;">
+            <div class="boite-fin">
+                <h2>⏳ Temps écoulé ! ⏳</h2>
+                <div class="score-final">
+                    <p class="bravo-justes">✅ <span id="fin-justes">0</span> bonnes réponses</p>
+                    <p class="oups-erreurs">❌ <span id="fin-erreurs">0</span> erreurs</p>
+                    <p id="message-nouveau-record" style="display: none; color: #ff9800; font-size: 24px; margin-top: 15px; text-shadow: 0 0 10px #ff9800; animation: pop-combo 0.4s ease-out;">🏆 NOUVEAU RECORD ! 🏆</p>
+                    <p id="message-record-combo" style="display: none; color: #ff00ff; font-size: 24px; margin-top: 10px; text-shadow: 0 0 10px #ff00ff; animation: pop-combo 0.4s ease-out;">🌟 RECORD DE COMBO BATTU ! 🌟</p>
+                </div>
+                <!-- Le fameux bouton manquant ! -->
+                <button onclick="reinitialiserJeu()">🔄 Rejouer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panneau-classement">
+        <h2 id="titre-classement">🏆 Classement</h2>
+        <ul id="liste-scores">
+            <li class="aucun-score">Aucun score pour le moment</li>
+        </ul>
+    </div>
+
+
+    <!-- MODALE : LISTE DES JOUEURS ET AMIS -->
+    <div id="modale-amis" class="modale" style="display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
+        <div class="modale-contenu" style="width: 450px; max-height: 80vh; overflow-y: auto; text-align: left; padding: 25px;">
+            <span class="fermer" onclick="document.getElementById('modale-amis').style.display='none'">&times;</span>
+            <h2 style="margin-top: 0;">👥 Communauté</h2>
+            
+            <!-- Zone 1 : Demandes reçues -->
+            <div id="zone-demandes-amis" style="display: none;">
+                <h3 style="font-size: 14px; color: #ff9800; margin-bottom: 10px;">🔔 Demandes reçues</h3>
+                <div id="liste-demandes"></div>
+                <hr class="separateur">
+            </div>
+
+            <!-- Zone 2 : Mes Amis -->
+            <div id="zone-mes-amis">
+                <h3 style="font-size: 14px; color: #28a745; margin-bottom: 10px;">💚 Mes Amis</h3>
+                <div id="liste-amis"></div>
+                <hr class="separateur">
+            </div>
+
+            <!-- Zone 3 : Autres Joueurs -->
+            <div id="zone-autres-joueurs">
+                <h3 style="font-size: 14px; color: #555; margin-bottom: 10px;">🌍 Autres Joueurs</h3>
+                <div id="liste-autres"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE : PROFIL D'UN AUTRE JOUEUR -->
+    <div id="modale-profil-joueur" class="modale" style="display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1001;">
+        <div class="modale-contenu" style="width: 400px; text-align: center;">
+            <span class="fermer" onclick="document.getElementById('modale-profil-joueur').style.display='none'">&times;</span>
+            <h2 id="titre-profil-joueur" style="margin-top: 0;">Profil de...</h2>
+            <div id="contenu-profil-joueur"></div>
+        </div>
+    </div>
+
+    <div id="level-up-banner" class="level-banner-hidden">
+    <h2 class="level-title">Niveau Supérieur !</h2>
+    <p class="level-text">Tu passes au niveau <span id="new-level-span">2</span> !</p>
+    <p id="level-up-unlocks" class="level-unlock-text"></p>
+    </div>
+
+
+    <!-- MODALE : PERSONNALISATION (Avatar et Contours) -->
+    <div id="modale-personnalisation" class="modale" style="display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1002;">
+        <div class="modale-contenu" style="width: 380px; text-align: center; padding: 25px;">
+            <span class="fermer" onclick="document.getElementById('modale-personnalisation').style.display='none'">&times;</span>
+            <h2 style="margin-top: 0;">🎨 Personnalisation</h2>
+            
+            <h3 style="font-size: 14px; margin-top: 20px; color: #555;">Photo de profil</h3>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-action-ami" onclick="document.getElementById('upload-avatar').click()">📁 Choisir une image</button>
+                <button class="btn-action-ami gris" onclick="supprimerAvatar()">✖ Supprimer</button>
+            </div>
+            
+            <!-- 📁 LA LIGNE CACHÉE EST RANGÉE ICI : -->
+            <input type="file" id="upload-avatar" accept="image/*" style="display: none;" onchange="traiterNouvelAvatar(event)">
+
+            <hr class="separateur">
+            
+            <h3 style="font-size: 14px; margin-bottom: 15px; color: #555;">Bordures de profil</h3>
+            <div id="grille-contours" class="zone-boutons" style="gap: 28px; margin-top: 15px; padding: 15px; justify-content: center; flex-wrap: wrap;">
+                <!-- La grille sera générée ici par le Javascript -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODALE : AIDE DU JEU -->
+    <div id="modale-help" class="modale" style="display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1005;">
+        <div class="modale-contenu" style="width: 500px; max-height: 80vh; overflow-y: auto; text-align: left; padding: 25px;">
+            <span class="fermer" onclick="document.getElementById('modale-help').style.display='none'">&times;</span>
+            <h2 style="margin-top: 0; color: #d85a06;">Bienvenue sur 🎶Band'à Training🎶 !</h2>
+            
+            <p style="font-size: 14px; color: #555; line-height: 1.5;">
+                Cher Joe, ce jeu est conçu pour faire de toi un dieu de la lecture de notes et de la maîtrise de ton instrument. Voici comment devenir le meilleur des membres de ton pupitre et les humilier par ta supériorité :
+            </p>
+
+            <h3 style="font-size: 16px; color: #007BFF; margin-top: 20px;">🎲 Le But du Jeu</h3>
+            <ul style="font-size: 14px; color: #555; padding-left: 20px; line-height: 1.6;">
+                <li>Commence par choisir ton instrument, puis choisis un mode de jeu</li>
+                <li style="list-style-type: none; margin-left: -20px;"><strong>🎵 Mode Lecture de Notes</strong>
+                    <!-- Sous-liste -->
+                    <ul style="padding-left: 20px; margin-top: 5px; margin-bottom: 15px; list-style-type: circle;">
+                        <li>Lis la note affichée sur la portée et donne juste son nom.</li>
+                    </ul>
+                </li>
+                
+                <li style="list-style-type: none; margin-left: -20px;"><strong>🎯 Mode Lecture de Positions</strong>
+                    <!-- Sous-liste -->
+                    <ul style="padding-left: 20px; margin-top: 5px; list-style-type: circle;">
+                        <li>Lis la note affichée sur la portée et donne sa position/son doigté sur ton instrument. (Non disponible pour les sax, pour des raisons évidentes d'ergonomie)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3 style="font-size: 16px; color: #28a745; margin-top: 20px;">🟢 Mode Entraînement</h3>
+            <ul style="font-size: 14px; color: #555; padding-left: 20px; line-height: 1.6;">
+                <li>Là tu peux prendre ton temps, il n'y a pas de chronomètre, c'est chill.</li>
+                <li>Le jeu apprend de tes erreurs : si tu te trompes sur une note, elle reviendra plus souvent pour t'aider à l'assimiler (tu peux désactiver cette option dans les paramètres).</li>
+                
+                <!-- Le sous-paragraphe Plage de Notes -->
+                <li style="list-style-type: none; margin-left: -20px; margin-top: 15px;"><strong>🎼 Plage de Notes</strong>
+                    <!-- Sous-liste -->
+                    <ul style="padding-left: 20px; margin-top: 5px; list-style-type: circle;">
+                        <li>Ici, tu peux modifier le panel de notes dans lequel le jeu peut te tester, pratique si tu veux te concentrer sur un groupe de notes en particulier.</li>
+                        <li>Évidemment tu ne peux choisir qu'une note contenue dans la tessiture de ton instrument.</li>
+                        <li>Tu peux aussi choisir d'activer ou de désactiver les altérations en fonction de ton aisance.</li>
+                        <li><strong style="color:#dc3545">Attention :</strong> toutes les notes sont <strong>en tonalité de l'instrument correspondant</strong>, et non en tonalité réelle.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3 style="font-size: 16px; color: #dc3545; margin-top: 20px;">🏆 Mode Classé</h3>
+            <ul style="font-size: 14px; color: #555; padding-left: 20px; line-height: 1.6;">
+                <li><strong>Débloqué au Niveau 3 !</strong></li>
+                <li>Les notes défilent dès que tu réponds. Réponds le plus vite possible pour enchaîner les combos avant la fin du temps imparti.</li>
+                <li>Ton score est envoyé dans le classement général, à toi d'écraser tout le monde.</li>
+            </ul>
+
+            <h3 style="font-size: 16px; color: #9b59b6; margin-top: 20px;">🌟 Progression</h3>
+            <ul style="font-size: 14px; color: #555; padding-left: 20px; line-height: 1.6;">
+                <li>Gagne de l'XP à chaque bonne réponse pour monter en niveau.</li>
+                <li>Débloque des <strong>modes de jeu</strong> (Mode Libre au Niv. 4) et des <strong>contours bangers pour ta photo de profil</strong> afin d'asseoir ta suprématie.</li>
+                <li>Ajoute des amis (👥) pour comparer tes stats !</li>
+                <li>Alors crée-toi un compte si ce n'est pas déjà fait pour enregistrer tes perfs !</li>
+            </ul>
+
+            <h4 style="font-size: 16px; color: #596db6; margin-top: 20px;">Milca</h4>
+            
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="btn-action-ami vert" onclick="document.getElementById('modale-help').style.display='none'" style="padding: 10px 20px; font-size: 17px; font-weight: bold;">Compris, je m'en vais de ce pas anéantir mes adversaires !</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="database.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
